@@ -1,0 +1,38 @@
+server {
+
+    listen 443 ssl;
+    charset utf-8;
+
+    ssl_certificate /etc/letsencrypt/live/colin.darienlibrary.org/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/colin.darienlibrary.org/privkey.pem;
+
+    location /static {
+        alias /covercache/static;
+    }
+
+    location /media {
+        alias /covercache/media;
+    }
+
+    location /.well-known/acme-challenge {
+        root /tmp/letsencrypt;
+    }
+
+    location / {
+        allow 10.0.0.0/8;
+        deny all;
+        proxy_pass http://django:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+}
+
+server {
+
+    listen 80;
+    server_name colin.darienlibrary.org;
+    return 301 https://$host$request_uri;
+
+}

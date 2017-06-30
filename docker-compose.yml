@@ -1,0 +1,80 @@
+nginx:
+  restart: always
+  build: nginx/
+  ports:
+    - 80:80
+    - 443:443
+  volumes:
+    - /www/static
+    - /etc/localtime:/etc/localtime
+    # - ./nginx:/etc/nginx
+    - ./letsencrypt/conf:/etc/letsencrypt
+    - ./letsencrypt/html:/tmp/letsencrypt
+  volumes_from:
+    - django
+  links:
+    - django
+  environment:
+    - LE_RENEW_HOOK=docker kill -s HUP @CONTAINER_NAME@
+
+letsencrypt:
+  restart: always
+  image: kvaps/letsencrypt-webroot
+  volumes:
+    - /etc/localtime:/etc/localtime:ro
+    - /var/run/docker.sock:/var/run/docker.sock
+    - ./letsencrypt/conf:/etc/letsencrypt
+    - ./letsencrypt/html:/tmp/letsencrypt
+  links:
+    - nginx
+  environment:
+    - DOMAINS=colin.darienlibrary.org
+    - EMAIL=jmcnutt@darienlibrary.org
+    - WEBROOT_PATH=/tmp/letsencrypt
+    - EXP_LIMIT=30
+    - CHECK_FREQ=30
+
+django:
+  restart: always
+  build: django/
+  command: gunicorn covercache.wsgi:application -w 4 -b :8000 --reload
+  volumes:
+    - "./django/covercache:/covercache"
+  links:
+    - postgres
+    - redis
+    - rabbitmq
+
+postgres:
+  restart: always
+  image: postgres:latest
+  volumes_from:
+    - data
+
+data:
+  image: postgres:latest
+  volumes:
+    - /var/lib/postgresql
+  command: "true"
+
+celery:
+  restart: always
+  build: django/
+  # user: celery
+  command: celery worker -A covercache -B -l info
+  volumes:
+    - "./django/covercache:/covercache"
+  links:
+    - postgres
+    - redis
+    - rabbitmq
+  environment:
+    - C_FORCE_ROOT="true"
+
+rabbitmq:
+    restart: always
+    image: rabbitmq
+
+redis:
+    restart: always
+    image: redis
