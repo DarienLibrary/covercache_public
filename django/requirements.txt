@@ -5,7 +5,7 @@ celery==3.1.18
 chardet==2.2.1
 colorama==0.2.5
 Django==1.8.3
-djangorestframework==3.2.4
+djangorestframework==3.11.2
 drf-extensions==0.2.8
 elasticsearch==1.6.0
 gunicorn==19.4.1
