@@ -11,7 +11,7 @@ elasticsearch==1.6.0
 gunicorn==19.4.1
 html5lib==0.999
 kombu==3.0.26
-Pillow==3.1.1
+Pillow==8.2.0
 psycopg2==2.6.1
 pymssql==2.1.2
 python-dateutil==2.4.2
